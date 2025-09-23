@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Video Proctoring System - Project Deep Dive | Ganesh Vuyala</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-bg: #0f1419;
+            --secondary-bg: #1a1f2e;
+            --card-bg: #1e2539;
+            --accent-blue: #00d4ff;
+            --accent-purple: #6c5ce7;
+            --accent-green: #00ff88;
+            --accent-red: #ff4757;
+            --accent-orange: #ff9500;
+            --text-primary: #ffffff;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --border-color: #30363d;
+            --glow-blue: rgba(0, 212, 255, 0.3);
+            --glow-purple: rgba(108, 92, 231, 0.3);
+            --glow-red: rgba(255, 71, 87, 0.3);
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Background Animation */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: radial-gradient(circle at 20% 30%, rgba(0, 212, 255, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(108, 92, 231, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(255, 71, 87, 0.05) 0%, transparent 50%);
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(15, 20, 25, 0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent-blue);
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.3s ease;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 8rem 2rem 4rem;
+            text-align: center;
+            background: linear-gradient(135deg, rgba(255, 71, 87, 0.05), rgba(0, 212, 255, 0.05));
+        }
+
+        .hero-content {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .project-badge {
+            background: var(--accent-green);
+            color: var(--primary-bg);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--accent-red), var(--accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin-top: 2rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--accent-red);
+            display: block;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Section Styling */
+        .section {
+            padding: 4rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 3rem;
+            max-width: 600px;
+        }
+
+        /* Problem Section */
+        .problem-hero {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 3rem;
+            margin-bottom: 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .problem-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, var(--accent-red), var(--accent-orange));
+        }
+
+        .problem-text {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 2rem;
+        }
+
+        .problem-highlight {
+            background: linear-gradient(135deg, rgba(255, 71, 87, 0.1), rgba(255, 149, 0, 0.1));
+            border: 1px solid var(--accent-red);
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .problem-highlight h3 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--accent-red);
+            margin-bottom: 1rem;
+        }
+
+        .problem-highlight p {
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        /* Problem Grid */
+        .problem-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .problem-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            padding: 2rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .problem-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .problem-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--accent-red), var(--accent-orange));
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .problem-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+
+        .problem-desc {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Solution Architecture */
+        .solution-flow {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 3rem;
+            margin: 3rem 0;
+        }
+
+        .flow-diagram {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .flow-step {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            flex: 1;
+            min-width: 200px;
+            text-align: center;
+            position: relative;
+        }
+
+        .step-number {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: var(--accent-red);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .flow-arrow {
+            font-size: 2rem;
+            color: var(--accent-blue);
+        }
+
+        /* AI Detection Features */
+        .ai-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .ai-feature {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .ai-feature:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .ai-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-blue));
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .ai-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+
+        .ai-desc {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .detection-list {
+            list-style: none;
+            margin-top: 1rem;
+        }
+
+        .detection-list li {
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .detection-list li::before {
+            content: '🎯';
+            position: absolute;
+            left: 0;
+        }
+
+        /* Technical Stack */
+        .tech-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 3rem;
+            margin: 3rem 0;
+        }
+
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .tech-category h4 {
+            color: var(--accent-blue);
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .tech-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .tech-tag {
+            background: rgba(108, 92, 231, 0.2);
+            color: var(--accent-purple);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .ai-tag {
+            background: rgba(0, 255, 136, 0.2);
+            color: var(--accent-green);
+        }
+
+        /* System Architecture */
+        .arch-diagram {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 3rem;
+            margin: 3rem 0;
+        }
+
+        .arch-layers {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .arch-layer {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.05), rgba(108, 92, 231, 0.05));
+            border: 1px solid var(--accent-blue);
+            border-radius: 10px;
+            padding: 1.5rem;
+        }
+
+        .layer-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+            margin-bottom: 0.5rem;
+        }
+
+        .layer-desc {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* Screenshots/Demo */
+        .demo-section {
+            margin: 4rem 0;
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 3rem;
+            margin-top: 3rem;
+        }
+
+        .demo-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            padding: 2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .demo-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .demo-placeholder {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(135deg, rgba(255, 71, 87, 0.1), rgba(0, 212, 255, 0.1));
+            border: 2px dashed var(--accent-red);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            color: var(--accent-red);
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .demo-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+
+        .demo-desc {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Results & Impact */
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .result-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .result-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .result-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+
+        .result-desc {
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, rgba(255, 71, 87, 0.1), rgba(0, 212, 255, 0.1));
+            border: 1px solid var(--accent-red);
+            border-radius: 20px;
+            padding: 3rem;
+            text-align: center;
+            margin: 4rem 0;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-red), var(--accent-blue));
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px var(--glow-red);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-primary);
+            padding: 1rem 2rem;
+            border: 2px solid var(--border-color);
+            border-radius: 30px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-container {
+                padding: 1rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .hero-stats {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .flow-diagram {
+                flex-direction: column;
+            }
+
+            .flow-arrow {
+                transform: rotate(90deg);
+            }
+
+            .demo-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+        /* Enhanced Image Cards */
+.screenshot-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 10px;
+    margin-bottom: 1.5rem;
+    border: 2px solid var(--accent-red);
+    transition: border-color 0.3s ease;
+}
+
+.screenshot-container:hover {
+    border-color: var(--accent-blue);
+}
+
+.screenshot-image {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+    display: block;
+}
+
+.screenshot-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.screenshot-container:hover .screenshot-overlay {
+    opacity: 1;
+}
+
+.screenshot-container:hover .screenshot-image {
+    transform: scale(1.05);
+}
+
+.view-full-btn {
+    background: linear-gradient(135deg, var(--accent-red), var(--accent-blue));
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 25px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(255, 71, 87, 0.3);
+}
+
+.view-full-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255, 71, 87, 0.4);
+}
+    </style>
+</head>
+
+<body>
+    <div class="bg-animation"></div>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <a href="#" class="logo">Ganesh Vuyala</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Portfolio</a></li>
+                <li><a href="#overview">Overview</a></li>
+                <li><a href="#problem">Problem</a></li>
+                <li><a href="#solution">Solution</a></li>
+                <li><a href="#technical">Technical</a></li>
+                <li><a href="#demo">Demo</a></li>
+            </ul>
+            <a href="index.html" class="back-btn">← Back to Portfolio</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content fade-in">
+            <span class="project-badge">DEPLOYED & LIVE</span>
+            <h1>AI Video Proctoring System</h1>
+            <p class="hero-subtitle">
+                Bringing integrity and trust back to online interviews through real-time AI monitoring and intelligent behavior analysis. A complete end-to-end solution for fair remote assessments.
+            </p>
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <span class="stat-number">Real-time</span>
+                    <span class="stat-label">AI Detection</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">100%</span>
+                    <span class="stat-label">Browser-Based</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">0</span>
+                    <span class="stat-label">Server Processing</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Problem Analysis -->
+    <section id="problem" class="section fade-in">
+        <h2 class="section-title">The Trust Crisis in Online Interviews</h2>
+        <p class="section-subtitle">As the world shifted to remote work and online assessments, a fundamental problem emerged: how do you ensure fairness and integrity when you can't physically supervise candidates?</p>
+        
+        <div class="problem-hero">
+            <p class="problem-text">
+                The COVID-19 pandemic accelerated the adoption of online interviews and remote assessments across industries. However, this digital transformation came with an unexpected challenge: <strong>the complete breakdown of supervision and integrity monitoring</strong>.
+            </p>
+            <p class="problem-text">
+                Companies and educational institutions found themselves in a paradox - they needed to conduct fair assessments remotely, but had no reliable way to ensure candidates weren't cheating or being assisted by others. This created an environment of doubt and unfairness that undermined the entire assessment process.
+            </p>
+            
+            <div class="problem-highlight">
+                <h3>The Core Problem</h3>
+                <p>Without proper monitoring, online interviews became a "trust-but-cannot-verify" situation, putting honest candidates at a disadvantage and making results unreliable.</p>
+            </div>
+        </div>
+
+        <div class="problem-grid">
+            <div class="problem-card">
+                <div class="problem-icon">📱</div>
+                <h3 class="problem-title">Easy Cheating</h3>
+                <p class="problem-desc">
+                    Candidates can easily use phones, tablets, or other devices to look up answers, communicate with helpers, or access unauthorized materials without detection.
+                </p>
+            </div>
+            
+            <div class="problem-card">
+                <div class="problem-icon">👥</div>
+                <h3 class="problem-title">External Assistance</h3>
+                <p class="problem-desc">
+                    No way to detect if someone else is in the room providing answers, coaching, or even taking the interview on behalf of the candidate.
+                </p>
+            </div>
+            
+            <div class="problem-card">
+                <div class="problem-icon">🎯</div>
+                <h3 class="problem-title">Lack of Focus Verification</h3>
+                <p class="problem-desc">
+                    Interviewers cannot determine if candidates are truly engaged, paying attention, or if they've stepped away from their computers.
+                </p>
+            </div>
+            
+            <div class="problem-card">
+                <div class="problem-icon">⚖️</div>
+                <h3 class="problem-title">Unfair Advantage</h3>
+                <p class="problem-desc">
+                    Honest candidates who follow the rules are placed at a significant disadvantage compared to those who cheat, creating an unfair playing field.
+                </p>
+            </div>
+            
+            <div class="problem-card">
+                <div class="problem-icon">❓</div>
+                <h3 class="problem-title">Unreliable Results</h3>
+                <p class="problem-desc">
+                    Without proper monitoring, the final assessment results cannot be trusted, making it difficult to make informed hiring or academic decisions.
+                </p>
+            </div>
+            
+            <div class="problem-card">
+                <div class="problem-icon">🔍</div>
+                <h3 class="problem-title">No Evidence Trail</h3>
+                <p class="problem-desc">
+                    Even if suspicious behavior is suspected, there's no concrete evidence or documentation to support claims of misconduct or integrity violations.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Solution Overview -->
+    <section id="solution" class="section fade-in">
+        <h2 class="section-title">The AI-Powered Solution</h2>
+        <p class="section-subtitle">A comprehensive proctoring system that brings transparency, fairness, and trust back to online interviews through intelligent monitoring and analysis.</p>
+        
+        <div class="solution-flow">
+            <h3 style="color: var(--text-primary); margin-bottom: 2rem; text-align: center;">How It Works</h3>
+            <div class="flow-diagram">
+                <div class="flow-step">
+                    <div class="step-number">1</div>
+                    <h4>Candidate Login</h4>
+                    <p>Secure authentication and webcam permission request</p>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">
+                    <div class="step-number">2</div>
+                    <h4>AI Monitoring</h4>
+                    <p>Real-time behavior analysis using browser-based AI models</p>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">
+                    <div class="step-number">3</div>
+                    <h4>Event Logging</h4>
+                    <p>Suspicious activities are flagged and timestamped automatically</p>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">
+                    <div class="step-number">4</div>
+                    <h4>Report Generation</h4>
+                    <p>Comprehensive integrity report with video evidence</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="ai-features">
+            <div class="ai-feature">
+                <div class="ai-icon">🤖</div>
+                <h3 class="ai-title">Intelligent Object Detection</h3>
+                <p class="ai-desc">
+                    Advanced computer vision models continuously scan the video feed to identify prohibited items and suspicious objects in real-time.
+                </p>
+                <ul class="detection-list">
+                    <li>Cell phone detection</li>
+                    <li>Book and paper identification</li>
+                    <li>Secondary device monitoring</li>
+                    <li>Writing materials tracking</li>
+                </ul>
+            </div>
+            
+            <div class="ai-feature">
+                <div class="ai-icon">👁️</div>
+                <h3 class="ai-title">Face & Behavior Analysis</h3>
+                <p class="ai-desc">
+                    Sophisticated facial recognition and behavior analysis to ensure candidate presence, attention, and compliance with assessment rules.
+                </p>
+                <ul class="detection-list">
+                    <li>Face presence verification</li>
+                    <li>Eye movement tracking</li>
+                    <li>Head pose estimation</li>
+                    <li>Multiple person detection</li>
+                </ul>
+            </div>
+            
+            <div class="ai-feature">
+                <div class="ai-icon">📊</div>
+                <h3 class="ai-title">Real-time Event Logging</h3>
+                <p class="ai-desc">
+                    Every suspicious activity is automatically logged with precise timestamps, creating a comprehensive audit trail for review.
+                </p>
+                <ul class="detection-list">
+                    <li>Timestamped event records</li>
+                    <li>Severity classification</li>
+                    <li>Behavior pattern analysis</li>
+                    <li>Integrity score calculation</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technical Implementation -->
+    <section id="technical" class="section fade-in">
+        <h2 class="section-title">Technical Architecture & Innovation</h2>
+        <p class="section-subtitle">Built with cutting-edge AI technologies and smart architectural decisions for optimal performance and privacy.</p>
+        
+        <div class="arch-diagram">
+            <h3 style="color: var(--text-primary); margin-bottom: 1.5rem;">System Architecture</h3>
+            <div class="arch-layers">
+                <div class="arch-layer">
+                    <h4 class="layer-title">Frontend (React)</h4>
+                    <p class="layer-desc">User interface for both candidates and interviewers, with real-time video processing capabilities and responsive design</p>
+                </div>
+                <div class="arch-layer">
+                    <h4 class="layer-title">AI Processing Layer (Browser)</h4>
+                    <p class="layer-desc">TensorFlow.js and MediaPipe models running directly in the browser for real-time object detection and face analysis</p>
+                </div>
+                <div class="arch-layer">
+                    <h4 class="layer-title">Backend API (Node.js)</h4>
+                    <p class="layer-desc">Express.js server handling authentication, session management, event logging, and report generation</p>
+                </div>
+                <div class="arch-layer">
+                    <h4 class="layer-title">Database (MongoDB)</h4>
+                    <p class="layer-desc">Document storage for user sessions, event logs, integrity reports, and video metadata</p>
+                </div>
+                <div class="arch-layer">
+                    <h4 class="layer-title">Cloud Storage (Cloudinary)</h4>
+                    <p class="layer-desc">Secure video storage and delivery with automatic optimization and CDN distribution</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="tech-section">
+            <h3 style="color: var(--text-primary); margin-bottom: 2rem;">Technology Stack</h3>
+            <div class="tech-grid">
+                <div class="tech-category">
+                    <h4>AI & Machine Learning</h4>
+                    <div class="tech-tags">
+                        <span class="tech-tag ai-tag">TensorFlow.js</span>
+                        <span class="tech-tag ai-tag">MediaPipe</span>
+                        <span class="tech-tag ai-tag">Computer Vision</span>
+                        <span class="tech-tag ai-tag">Object Detection</span>
+                        <span class="tech-tag ai-tag">Face Recognition</span>
+                    </div>
+                </div>
+                
+                <div class="tech-category">
+                    <h4>Frontend</h4>
+                    <div class="tech-tags">
+                        <span class="tech-tag">React</span>
+                        <span class="tech-tag">WebRTC</span>
+                        <span class="tech-tag">Canvas API</span>
+                        <span class="tech-tag">MediaStream API</span>
+                        <span class="tech-tag">Responsive Design</span>
+                    </div>
+                </div>
+                
+                <div class="tech-category">
+                    <h4>Backend</h4>
+                    <div class="tech-tags">
+                        <span class="tech-tag">Node.js</span>
+                        <span class="tech-tag">Express.js</span>
+                        <span class="tech-tag">RESTful APIs</span>
+                        <span class="tech-tag">JWT Authentication</span>
+                        <span class="tech-tag">Middleware</span>
+                    </div>
+                </div>
+                
+                <div class="tech-category">
+                    <h4>Database & Storage</h4>
+                    <div class="tech-tags">
+                        <span class="tech-tag">MongoDB</span>
+                        <span class="tech-tag">Cloudinary</span>
+                        <span class="tech-tag">Video Processing</span>
+                        <span class="tech-tag">CDN Delivery</span>
+                    </div>
+                </div>
+                
+                <div class="tech-category">
+                    <h4>Security & Performance</h4>
+                    <div class="tech-tags">
+                        <span class="tech-tag">HTTPS/SSL</span>
+                        <span class="tech-tag">Data Encryption</span>
+                        <span class="tech-tag">CORS Protection</span>
+                        <span class="tech-tag">Rate Limiting</span>
+                    </div>
+                </div>
+                
+                <div class="tech-category">
+                    <h4>Development & Deployment</h4>
+                    <div class="tech-tags">
+                        <span class="tech-tag">Git</span>
+                        <span class="tech-tag">Vercel</span>
+                        <span class="tech-tag">Environment Config</span>
+                        <span class="tech-tag">CI/CD Pipeline</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Key Innovation -->
+    <section class="section fade-in">
+        <h2 class="section-title">Technical Innovation & Smart Architecture</h2>
+        <p class="section-subtitle">Strategic design decisions that solve complex problems efficiently and cost-effectively.</p>
+        
+        <div class="ai-features">
+            <div class="ai-feature">
+                <div class="ai-icon">⚡</div>
+                <h3 class="ai-title">Browser-Based AI Processing</h3>
+                <p class="ai-desc">
+                    <strong>The Innovation:</strong> Instead of sending heavy video streams to powerful servers, all AI processing happens directly in the candidate's browser using TensorFlow.js and MediaPipe.
+                </p>
+                <p class="ai-desc">
+                    <strong>Why This Matters:</strong> Reduces server costs by 95%, eliminates bandwidth bottlenecks, ensures privacy (video never leaves the device during processing), and provides instant real-time feedback.
+                </p>
+            </div>
+            
+            <div class="ai-feature">
+                <div class="ai-icon">🎯</div>
+                <h3 class="ai-title">Smart Event-Only Transmission</h3>
+                <p class="ai-desc">
+                    <strong>The Innovation:</strong> Only tiny event messages are sent to the server in real-time (e.g., "10:32:05 - Cell Phone Detected"), not the entire video stream.
+                </p>
+                <p class="ai-desc">
+                    <strong>Why This Matters:</strong> Enables real-time monitoring with minimal bandwidth usage, maintains system responsiveness even on slow connections, and creates precise audit trails.
+                </p>
+            </div>
+            
+            <div class="ai-feature">
+                <div class="ai-icon">🛡️</div>
+                <h3 class="ai-title">Privacy-First Architecture</h3>
+                <p class="ai-desc">
+                    <strong>The Innovation:</strong> Video analysis happens locally, full video is only uploaded at session end, and all data is encrypted in transit and at rest.
+                </p>
+                <p class="ai-desc">
+                    <strong>Why This Matters:</strong> Addresses privacy concerns of candidates and organizations, complies with data protection regulations, and builds trust through transparent data handling.
+                </p>
+            </div>
+            
+            <div class="ai-feature">
+                <div class="ai-icon">📊</div>
+                <h3 class="ai-title">Intelligent Integrity Scoring</h3>
+                <p class="ai-desc">
+                    <strong>The Innovation:</strong> Automated calculation of integrity scores based on the frequency, severity, and duration of flagged events during the session.
+                </p>
+                <p class="ai-desc">
+                    <strong>Why This Matters:</strong> Provides interviewers with actionable insights at a glance, enables objective comparison between candidates, and reduces subjective bias in evaluation.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo/Screenshots -->
+    <section id="demo" class="section fade-in">
+    <div class="demo-section">
+        <h2 class="section-title">System Interface & User Experience</h2>
+        <p class="section-subtitle">Clean, intuitive interfaces designed for both candidates and interviewers.</p>
+        
+        <div class="demo-grid">
+            <div class="demo-card">
+                <div class="screenshot-container">
+                    <img src="images/proctoring/proc1.png" alt="Candidate Proctoring Interface" class="screenshot-image">
+                    <div class="screenshot-overlay">
+                        <button class="view-full-btn">View Full Size</button>
+                    </div>
+                </div>
+                <h3 class="demo-title">Candidate Proctoring View</h3>
+                <p class="demo-desc">
+                    Clean, non-intrusive interface showing the candidate their video feed with minimal distractions. The AI works silently in the background, maintaining focus on the interview content while ensuring integrity monitoring.
+                </p>
+            </div>
+            
+            <div class="demo-card">
+                <div class="screenshot-container">
+                    <img src="images/proctoring/proc2.png" alt="Interviewer Dashboard Interface" class="screenshot-image">
+                    <div class="screenshot-overlay">
+                        <button class="view-full-btn">View Full Size</button>
+                    </div>
+                </div>
+                <h3 class="demo-title">Interviewer Dashboard</h3>
+                <p class="demo-desc">
+                    Comprehensive dashboard showing all completed sessions with quick access to integrity scores, session duration, and flagged events. Designed for busy interviewers who need information at a glance.
+                </p>
+            </div>
+            
+            <div class="demo-card">
+                <div class="screenshot-container">
+                    <img src="images/proctoring/proc3.png" alt="Detailed Integrity Report" class="screenshot-image">
+                    <div class="screenshot-overlay">
+                        <button class="view-full-btn">View Full Size</button>
+                    </div>
+                </div>
+                <h3 class="demo-title">Detailed Integrity Report</h3>
+                <p class="demo-desc">
+                    In-depth session analysis with timeline of events, severity classifications, and video evidence. Includes exportable reports for HR records and decision-making documentation.
+                </p>
+            </div>
+            
+            <div class="demo-card">
+                <div class="screenshot-container">
+                    <img src="images/proctoring/proc4.png" alt="Real-time AI Detection View" class="screenshot-image">
+                    <div class="screenshot-overlay">
+                        <button class="view-full-btn">View Full Size</button>
+                    </div>
+                </div>
+                <h3 class="demo-title">Real-time AI Detection</h3>
+                <p class="demo-desc">
+                    Behind-the-scenes view of AI detection capabilities, showing object recognition, face analysis, and behavior monitoring in action. Demonstrates the sophisticated technology powering the system.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+    <!-- Problem-Solving Approach -->
+    <section class="section fade-in">
+        <h2 class="section-title">Problem-Solving Methodology</h2>
+        <p class="section-subtitle">How technical challenges were identified and solved systematically.</p>
+        
+        <div class="problem-grid">
+            <div class="problem-card">
+                <div class="problem-icon">🎯</div>
+                <h3 class="problem-title">User-Centric Design</h3>
+                <p class="problem-desc">
+                    Recognized that both candidates and interviewers needed different experiences. Candidates need minimal distraction, while interviewers need comprehensive data. Built two distinct but connected interfaces.
+                </p>
+            </div>
+            
+            <div class="problem-card">
+                <div class="problem-icon">⚡</div>
+                <h3 class="problem-title">Performance Optimization</h3>
+                <p class="problem-desc">
+                    Identified that server-side video processing would be expensive and slow. Moved AI processing to the browser, reducing costs and improving real-time performance dramatically.
+                </p>
+            </div>
+            
+            <div class="problem-card">
+                <div class="problem-icon">🔒</div>
+                <h3 class="problem-title">Privacy by Design</h3>
+                <p class="problem-desc">
+                    Anticipated privacy concerns early and built the architecture to process video locally. Only metadata and final recordings are transmitted, addressing compliance and trust issues.
+                </p>
+            </div>
+            
+            <div class="problem-card">
+                <div class="problem-icon">📈</div>
+                <h3 class="problem-title">Scalable Architecture</h3>
+                <p class="problem-desc">
+                    Designed the system to handle multiple concurrent sessions without proportional increases in server resources, enabling cost-effective scaling for enterprise adoption.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Results & Impact -->
+    <section class="section fade-in">
+        <h2 class="section-title">Project Impact & Results</h2>
+        <p class="section-subtitle">Measurable outcomes and the transformation achieved through intelligent system design.</p>
+        
+        <div class="results-grid">
+            <div class="result-card">
+                <span class="result-icon">✅</span>
+                <h3 class="result-title">Fairness Restored</h3>
+                <p class="result-desc">
+                    Created a level playing field where honest candidates are no longer disadvantaged by those who cheat
+                </p>
+            </div>
+            
+            <div class="result-card">
+                <span class="result-icon">📹</span>
+                <h3 class="result-title">Concrete Evidence</h3>
+                <p class="result-desc">
+                    Provides video proof and detailed logs to support all integrity-related decisions and claims
+                </p>
+            </div>
+            
+            <div class="result-card">
+                <span class="result-icon">🚀</span>
+                <h3 class="result-title">Real-time Detection</h3>
+                <p class="result-desc">
+                    Instant identification of suspicious behavior without any delay or manual review required
+                </p>
+            </div>
+            
+            <div class="result-card">
+                <span class="result-icon">💰</span>
+                <h3 class="result-title">Cost-Effective</h3>
+                <p class="result-desc">
+                    95% reduction in server processing costs through smart browser-based AI implementation
+                </p>
+            </div>
+            
+            <div class="result-card">
+                <span class="result-icon">🔒</span>
+                <h3 class="result-title">Privacy-Compliant</h3>
+                <p class="result-desc">
+                    Addresses data protection concerns through local processing and secure, encrypted storage
+                </p>
+            </div>
+            
+            <div class="result-card">
+                <span class="result-icon">⚖️</span>
+                <h3 class="result-title">Objective Assessment</h3>
+                <p class="result-desc">
+                    Removes human bias from integrity evaluation through automated, consistent AI analysis
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technical Challenges Overcome -->
+    <section class="section fade-in">
+        <h2 class="section-title">Complex Challenges Solved</h2>
+        <p class="section-subtitle">Technical hurdles that required innovative solutions and strategic thinking.</p>
+        
+        <div class="ai-features">
+            <div class="ai-feature">
+                <div class="ai-icon">🧠</div>
+                <h3 class="ai-title">Real-time AI in Browser</h3>
+                <p class="ai-desc">
+                    <strong>Challenge:</strong> Running sophisticated AI models in web browsers without affecting performance or user experience.
+                </p>
+                <p class="ai-desc">
+                    <strong>Solution:</strong> Optimized TensorFlow.js models, efficient memory management, and WebGL acceleration to achieve real-time processing at 30+ FPS.
+                </p>
+            </div>
+            
+            <div class="ai-feature">
+                <div class="ai-icon">⚡</div>
+                <h3 class="ai-title">Low-Latency Communication</h3>
+                <p class="ai-desc">
+                    <strong>Challenge:</strong> Sending detection events to the server instantly without disrupting the interview flow or causing delays.
+                </p>
+                <p class="ai-desc">
+                    <strong>Solution:</strong> WebSocket connections for real-time communication, event queuing, and optimized data structures to minimize payload size.
+                </p>
+            </div>
+            
+            <div class="ai-feature">
+                <div class="ai-icon">📱</div>
+                <h3 class="ai-title">Cross-Device Compatibility</h3>
+                <p class="ai-desc">
+                    <strong>Challenge:</strong> Ensuring consistent AI performance across different devices, browsers, and hardware configurations.
+                </p>
+                <p class="ai-desc">
+                    <strong>Solution:</strong> Adaptive model loading, device capability detection, and graceful degradation for lower-end hardware while maintaining core functionality.
+                </p>
+            </div>
+            
+            <div class="ai-feature">
+                <div class="ai-icon">🎯</div>
+                <h3 class="ai-title">Accurate Detection Logic</h3>
+                <p class="ai-desc">
+                    <strong>Challenge:</strong> Minimizing false positives while maintaining high sensitivity to actual cheating attempts and suspicious behaviors.
+                </p>
+                <p class="ai-desc">
+                    <strong>Solution:</strong> Multi-model validation, confidence thresholds, temporal analysis, and behavior pattern recognition to improve accuracy.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Call to Action -->
+    <section class="section fade-in">
+        <div class="cta-section">
+            <h2 class="section-title">Experience the AI Proctoring System</h2>
+            <p style="font-size: 1.2rem; color: var(--text-secondary); margin-bottom: 2rem;">
+                See how cutting-edge AI technology can restore trust and integrity to online interviews through intelligent, automated monitoring.
+            </p>
+            <div class="cta-buttons">
+                <a href="https://video-proctoring-kappa.vercel.app/" class="btn-primary">Try Live Demo</a>
+                <a href="https://github.com/GaneshVuyala/video-proctoring" class="btn-secondary">View Source Code</a>
+                <a href="index.html" class="btn-secondary">← Back to Portfolio</a>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Intersection Observer for scroll animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        // Observe all fade-in elements
+        document.querySelectorAll('.fade-in').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Navigation background on scroll
+        window.addEventListener('scroll', () => {
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 100) {
+                nav.style.background = 'rgba(15, 20, 25, 0.95)';
+            } else {
+                nav.style.background = 'rgba(15, 20, 25, 0.9)';
+            }
+        });
+
+        // Highlight current section in navigation
+        const sections = document.querySelectorAll('section[id]');
+        const navLinks = document.querySelectorAll('.nav-links a[href^="#"]');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop - 150;
+                const sectionHeight = section.offsetHeight;
+                
+                if (window.pageYOffset >= sectionTop && window.pageYOffset < sectionTop + sectionHeight) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.style.color = 'var(--text-secondary)';
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.style.color = 'var(--accent-blue)';
+                }
+            });
+        });
+
+        // Add parallax effect to hero section
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const parallax = document.querySelector('.hero');
+            const speed = scrolled * 0.3;
+            
+            if (parallax) {
+                parallax.style.transform = `translateY(${speed}px)`;
+            }
+        });
+
+        // AI detection simulation animation
+        const simulateDetection = () => {
+            const aiFeatures = document.querySelectorAll('.ai-feature');
+            aiFeatures.forEach((feature, index) => {
+                setTimeout(() => {
+                    feature.style.transform = 'scale(1.02)';
+                    feature.style.boxShadow = '0 25px 50px rgba(0, 212, 255, 0.2)';
+                    setTimeout(() => {
+                        feature.style.transform = 'translateY(-5px)';
+                        feature.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.3)';
+                    }, 200);
+                }, index * 100);
+            });
+        };
+
+        // Trigger detection animation when AI features section is visible
+        const aiObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    simulateDetection();
+                    aiObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.3 });
+
+        const aiSection = document.querySelector('.ai-features');
+        if (aiSection) {
+            aiObserver.observe(aiSection);
+        }
+        // Add this function to your existing script
+function initializeImageLightbox() {
+    document.querySelectorAll('.view-full-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const img = this.closest('.screenshot-container').querySelector('.screenshot-image');
+            openLightbox(img.src, img.alt);
+        });
+    });
+    
+    // Also make images clickable
+    document.querySelectorAll('.screenshot-image').forEach(img => {
+        img.addEventListener('click', function() {
+            openLightbox(this.src, this.alt);
+        });
+        img.style.cursor = 'pointer';
+    });
+}
+
+function openLightbox(src, alt) {
+    const lightbox = document.createElement('div');
+    lightbox.innerHTML = `
+        <div style="
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            cursor: pointer;
+            animation: fadeIn 0.3s ease;
+        " onclick="this.remove()">
+            <img src="${src}" alt="${alt}" style="
+                max-width: 90%;
+                max-height: 90%;
+                object-fit: contain;
+                border-radius: 10px;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+                animation: scaleIn 0.3s ease;
+            ">
+            <button onclick="this.parentElement.remove()" style="
+                position: absolute;
+                top: 20px;
+                right: 30px;
+                background: linear-gradient(135deg, var(--accent-red), var(--accent-blue));
+                border: none;
+                color: white;
+                font-size: 1.5rem;
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: transform 0.2s ease;
+            " onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">&times;</button>
+            <div style="
+                position: absolute;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                color: white;
+                text-align: center;
+                background: rgba(0, 0, 0, 0.7);
+                padding: 0.5rem 1rem;
+                border-radius: 20px;
+                font-size: 0.9rem;
+            ">Click anywhere to close</div>
+        </div>
+    `;
+    
+    // Add animation keyframes if not already added
+    if (!document.querySelector('#lightbox-styles')) {
+        const style = document.createElement('style');
+        style.id = 'lightbox-styles';
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            @keyframes scaleIn {
+                from { transform: scale(0.8); opacity: 0; }
+                to { transform: scale(1); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    document.body.appendChild(lightbox.firstElementChild);
+}
+
+// Update your existing window load event listener to include this
+window.addEventListener('load', function() {
+    // ... your existing initialization code ...
+    initializeImageLightbox();
+});
+    </script>
+</body>
+
+</html>
